@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';"/>
+</head>
+<body style="background: #474747; color: azure;">
+<h1>I am <span id="whoami-container"></span></h1>
+<p>Response from local server: <span id="response-content" style="text-decoration: underline;"></span></p>
+<p>Main server status: <span id="main-server-status"></span></p>
+<script>
+    window.addEventListener('load', () => {
+        window.api.send("toMain", 'getConfig', {});
+        window.api.receive('fromMain', (event, arg) => {
+            console.log(event, arg)
+
+            switch (event) {
+
+                case 'config':
+                    fetch(arg.url).then(async (r) => {
+                        document.getElementById('response-content').innerHTML = (await r.json()).msg;
+                    })
+
+                    fetch(`${arg.url}/whoami`).then(async (r) => {
+                        const result = await r.json();
+                        document.getElementById('whoami-container').innerHTML = `${result.iAm} [${result.name}]`;
+                    })
+                    break;
+                case 'status':
+                    console.log(arg)
+                    document.getElementById('main-server-status').innerHTML = `connected: ${arg.connectedToMainServer}, [name: ${arg?.server?.name} ip: ${arg?.server?.ip}  ]`;
+                    break
+            }
+
+
+        })
+    })
+
+
+</script>
+</body>
+</html>
